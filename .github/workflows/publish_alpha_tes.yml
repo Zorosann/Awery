@@ -41,7 +41,7 @@ jobs:
       - name: Download last SHA artifact
         uses: dawidd6/action-download-artifact@v3
         with:
-          workflow: publish_alpha.yml
+          workflow: publish_alpha_test.yml
           name: last-sha
           path: .
         continue-on-error: true
