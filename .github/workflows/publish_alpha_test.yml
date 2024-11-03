@@ -164,8 +164,8 @@ jobs:
                 "color": 5814783
               }]
             }
-            EOF
-          )
+           EOF
+              )
           curl -H "Content-Type: application/json" \
             -d "$payload" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
