@@ -133,7 +133,7 @@ jobs:
           -F "chat_id=-1002066701332" \
           -F "message_thread_id=737" \
           -F "document=@$APK_PATH" \
-          -F "caption=New Alpha-Build dropped 🔥
+          -F "caption=New Alpha-Build dropped 🔥🙄
           Commits:$formatted_messages" \
           -F "parse_mode=HTML"
 
@@ -156,7 +156,7 @@ jobs:
           payload="{
             \"content\": \"<@&1208839371575529572>\",
             \"embeds\": [{
-              \"title\": \"New Awery Alpha Update 🔥\",
+              \"title\": \"New Awery Alpha Update 🔥🙄\",
               \"description\": \"Commits:\\n${ESCAPED_COMMIT_LOG}\",
               \"color\": 5814783
             }]
