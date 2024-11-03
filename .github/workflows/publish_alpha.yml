@@ -1,9 +1,9 @@
-name: Build & Publish Alpha APK 
+name: Notify TG & DC  
 
 on:
   push:
     branches:
-      - Test
+      - master
     paths-ignore:
       - "docs/**"
       - "README.md"
@@ -41,7 +41,7 @@ jobs:
       - name: Download last SHA artifact
         uses: dawidd6/action-download-artifact@v3
         with:
-          workflow: publish_alpha.yml
+          workflow: publish_alpha_test.yml
           name: last-sha
           path: .
         continue-on-error: true
@@ -68,7 +68,7 @@ jobs:
             LAST_SHA=$(git rev-list HEAD~10 -n 1)
           fi
           COMMIT_LOGS=$(git log $LAST_SHA..HEAD --pretty=format:"● %s ~%an [֍](https://github.com/${{ github.repository }}/commit/%H)")
-          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request <a href="https://github.com/${{ github.repository }}/pull/\1">#\1</a> from \2|g')
+          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's/#([0-9]+)/[#\1](https:\/\/github.com\/Shebyyy\/Awery\/pull\/\1)/g')
           echo "$FORMATTED_COMMIT_LOGS" > commit_log.txt
           echo "COMMIT_LOG<<EOF" >> $GITHUB_ENV
           echo "$FORMATTED_COMMIT_LOGS" >> $GITHUB_ENV
@@ -127,6 +127,7 @@ jobs:
           fi
           TRUNCATED_COMMIT_LOG="$COMMIT_LOG"
           telegram_commit_messages=$(echo "$TRUNCATED_COMMIT_LOG" | sed 's/%0A/\n/g' | sed -E 's/● (.*) ~(.*) \[֍\]\((.*)\)/● \1 ~\2 <a href="\3">֍<\/a>/')
+          message=$(echo "$telegram_commit_messages" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request <a href="https://github.com/${{ github.repository }}/pull/\1">#\1</a> from \2|g')
           formatted_messages="<blockquote>${telegram_commit_messages}</blockquote>"
           curl -v -X POST \
           "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
@@ -141,37 +142,31 @@ jobs:
         if: success()
         run: |
           COMMIT_LOG=$(cat commit_log.txt)
-    
-           if [ ${#COMMIT_LOG} -gt 2000 ]; then
+          if [ ${#COMMIT_LOG} -gt 2000 ]; then
             TRUNCATED_LOG=$(echo "$COMMIT_LOG" | head -c 1800)
             LAST_COMPLETE=$(echo "$TRUNCATED_LOG" | grep -o "^●.*$" | tail -n 1)
             if [ ! -z "$LAST_COMPLETE" ]; then
-            LAST_POS=$(echo "$TRUNCATED_LOG" | grep -b -o "^$LAST_COMPLETE" | cut -d: -f1)
-            COMMIT_LOG="${COMMIT_LOG:0:$LAST_POS}$LAST_COMPLETE\nCommit removed cause it was incomplete"
+              LAST_POS=$(echo "$TRUNCATED_LOG" | grep -b -o "^$LAST_COMPLETE" | cut -d: -f1)
+              COMMIT_LOG="${COMMIT_LOG:0:$LAST_POS}$LAST_COMPLETE"
             else
-            COMMIT_LOG="${COMMIT_LOG:0:1800}... (truncated)"
+              COMMIT_LOG="${COMMIT_LOG:0:1800}... (truncated)"
             fi
-            fi
-
-            ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
-            ESCAPED_COMMIT_LOG=$(echo "$ESCAPED_COMMIT_LOG" | sed 's|<a href="\(.*\)">\(.*\)</a>|[\2](\1)|g')
-
-            payload="{
-                  \"content\": \"<@&1208839371575529572>\",
-                  \"embeds\": [{
-                    \"title\": \"New Awery Alpha Update!\",
-                    \"description\": \"Commits:\\n${ESCAPED_COMMIT_LOG}\",
-                    \"color\": 5814783
-                  }]
-                }"
-
-            curl -H "Content-Type: application/json" \
-                  -d "$payload" \
-                  ${{ secrets.DISCORD_WEBHOOK_URL }}
-    
-                curl -H "Content-Type: multipart/form-data" \
-                  -F "file1=@$APK_PATH" \
-                  ${{ secrets.DISCORD_WEBHOOK_URL }}
+          fi
+          ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
+          payload="{
+            \"content\": \"<@&1208839371575529572>\",
+            \"embeds\": [{
+              \"title\": \"New Awery Alpha Update!\",
+              \"description\": \"Commits:\\n${ESCAPED_COMMIT_LOG}\",
+              \"color\": 5814783
+            }]
+          }"
+          curl -H "Content-Type: application/json" \
+            -d "$payload" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
+          curl -H "Content-Type: multipart/form-data" \
+            -F "file1=@$APK_PATH" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Save Current SHA for Next Run
         if: success()
