@@ -154,26 +154,20 @@ jobs:
             fi
           fi
           ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
-          payload=$(
-            cat <<EOF
-            {
-              "content": "<@&1208839371575529572>",
-              "embeds": [{
-                "title": "New Awery Alpha Update 🔥",
-                "description": "Commits:\\n${ESCAPED_COMMIT_LOG}",
-                "color": 5814783
-              }]
-            }
-           EOF
-              )
+          payload="{
+            \"content\": \"<@&1208839371575529572>\",
+            \"embeds\": [{
+              \"title\": \"New Awery Alpha Update!\",
+              \"description\": \"Commits:\\n${ESCAPED_COMMIT_LOG}\",
+              \"color\": 5814783
+            }]
+          }"
           curl -H "Content-Type: application/json" \
             -d "$payload" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
-
           curl -H "Content-Type: multipart/form-data" \
             -F "file1=@$APK_PATH" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
-
 
       - name: Save Current SHA for Next Run
         if: success()
