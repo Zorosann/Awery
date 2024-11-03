@@ -3,7 +3,7 @@ name: Build & Publish Alpha APK
 on:
   push:
     branches:
-      - master
+      - Test
     paths-ignore:
       - "docs/**"
       - "README.md"
@@ -68,7 +68,7 @@ jobs:
             LAST_SHA=$(git rev-list HEAD~10 -n 1)
           fi
           COMMIT_LOGS=$(git log $LAST_SHA..HEAD --pretty=format:"● %s ~%an [֍](https://github.com/${{ github.repository }}/commit/%H)")
-          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's/#([0-9]+)/[#\1](https:\/\/github.com\/Shebyyy\/Awery\/pull\/\1)/g')
+          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request <a href="https://github.com/${{ github.repository }}/pull/\1">#\1</a> from \2|g')
           echo "$FORMATTED_COMMIT_LOGS" > commit_log.txt
           echo "COMMIT_LOG<<EOF" >> $GITHUB_ENV
           echo "$FORMATTED_COMMIT_LOGS" >> $GITHUB_ENV
@@ -141,31 +141,37 @@ jobs:
         if: success()
         run: |
           COMMIT_LOG=$(cat commit_log.txt)
-          if [ ${#COMMIT_LOG} -gt 2000 ]; then
+    
+           if [ ${#COMMIT_LOG} -gt 2000 ]; then
             TRUNCATED_LOG=$(echo "$COMMIT_LOG" | head -c 1800)
             LAST_COMPLETE=$(echo "$TRUNCATED_LOG" | grep -o "^●.*$" | tail -n 1)
             if [ ! -z "$LAST_COMPLETE" ]; then
-              LAST_POS=$(echo "$TRUNCATED_LOG" | grep -b -o "^$LAST_COMPLETE" | cut -d: -f1)
-              COMMIT_LOG="${COMMIT_LOG:0:$LAST_POS}$LAST_COMPLETE"
+            LAST_POS=$(echo "$TRUNCATED_LOG" | grep -b -o "^$LAST_COMPLETE" | cut -d: -f1)
+            COMMIT_LOG="${COMMIT_LOG:0:$LAST_POS}$LAST_COMPLETE\nCommit removed cause it was incomplete"
             else
-              COMMIT_LOG="${COMMIT_LOG:0:1800}... (truncated)"
+            COMMIT_LOG="${COMMIT_LOG:0:1800}... (truncated)"
             fi
-          fi
-          ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
-          payload="{
-            \"content\": \"<@&1208839371575529572>\",
-            \"embeds\": [{
-              \"title\": \"New Awery Alpha Update!\",
-              \"description\": \"Commits:\\n${ESCAPED_COMMIT_LOG}\",
-              \"color\": 5814783
-            }]
-          }"
-          curl -H "Content-Type: application/json" \
-            -d "$payload" \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
-          curl -H "Content-Type: multipart/form-data" \
-            -F "file1=@$APK_PATH" \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
+            fi
+
+            ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
+            ESCAPED_COMMIT_LOG=$(echo "$ESCAPED_COMMIT_LOG" | sed 's|<a href="\(.*\)">\(.*\)</a>|[\2](\1)|g')
+
+            payload="{
+                  \"content\": \"<@&1208839371575529572>\",
+                  \"embeds\": [{
+                    \"title\": \"New Awery Alpha Update!\",
+                    \"description\": \"Commits:\\n${ESCAPED_COMMIT_LOG}\",
+                    \"color\": 5814783
+                  }]
+                }"
+
+            curl -H "Content-Type: application/json" \
+                  -d "$payload" \
+                  ${{ secrets.DISCORD_WEBHOOK_URL }}
+    
+                curl -H "Content-Type: multipart/form-data" \
+                  -F "file1=@$APK_PATH" \
+                  ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Save Current SHA for Next Run
         if: success()
