@@ -1,4 +1,4 @@
-name: Notify Telegram & Discord
+name: Notify TG & DC
 
 on:
   push:
