@@ -167,7 +167,6 @@ jobs:
             }
             EOF
           )
-
           curl -H "Content-Type: application/json" \
             -d "$payload" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
