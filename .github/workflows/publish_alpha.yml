@@ -1,4 +1,4 @@
-name: Build & Publish Alpha APK
+name: Build & Publish Alpha APK 
 
 on:
   push:
@@ -68,7 +68,7 @@ jobs:
             LAST_SHA=$(git rev-list HEAD~10 -n 1)
           fi
           COMMIT_LOGS=$(git log $LAST_SHA..HEAD --pretty=format:"● %s ~%an [֍](https://github.com/${{ github.repository }}/commit/%H)")
-          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request <a href="https://github.com/${{ github.repository }}/pull/\1">#\1</a> from \2|g')
+          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's/#([0-9]+)/[#\1](https:\/\/github.com\/Shebyyy\/Awery\/pull\/\1)/g')
           echo "$FORMATTED_COMMIT_LOGS" > commit_log.txt
           echo "COMMIT_LOG<<EOF" >> $GITHUB_ENV
           echo "$FORMATTED_COMMIT_LOGS" >> $GITHUB_ENV
@@ -130,8 +130,8 @@ jobs:
           formatted_messages="<blockquote>${telegram_commit_messages}</blockquote>"
           curl -v -X POST \
           "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
-          -F "chat_id=-1002206819738" \
-          -F "message_thread_id=174" \
+          -F "chat_id=-1002066701332" \
+          -F "message_thread_id=737" \
           -F "document=@$APK_PATH" \
           -F "caption=New Alpha-Build dropped 🔥
           Commits:$formatted_messages" \
