@@ -127,6 +127,7 @@ jobs:
           fi
           TRUNCATED_COMMIT_LOG="$COMMIT_LOG"
           telegram_commit_messages=$(echo "$TRUNCATED_COMMIT_LOG" | sed 's/%0A/\n/g' | sed -E 's/● (.*) ~(.*) \[֍\]\((.*)\)/● \1 ~\2 <a href="\3">֍<\/a>/')
+          message=$(echo "$telegram_commit_messages" | sed -E 's/\[#([0-9]+)\]\((https:\/\/github\.com\/[^)]+)\)/<a href="\2">#\1<\/a>/g')
           formatted_messages="<blockquote>${telegram_commit_messages}</blockquote>"
           curl -v -X POST \
           "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
