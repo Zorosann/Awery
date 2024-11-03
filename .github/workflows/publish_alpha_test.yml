@@ -68,7 +68,7 @@ jobs:
             LAST_SHA=$(git rev-list HEAD~10 -n 1)
           fi
           COMMIT_LOGS=$(git log $LAST_SHA..HEAD --pretty=format:"● %s ~%an [֍](https://github.com/${{ github.repository }}/commit/%H)")
-          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's/#([0-9]+)/[#\1](https:\/\/github.com\/Shebyyy\/Awery\/pull\/\1)/g')
+          FORMATTED_COMMIT_LOGS=$(echo "$COMMIT_LOGS" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request <a href="https://github.com/${{ github.repository }}/pull/\1">#\1</a> from \2|g')
           echo "$FORMATTED_COMMIT_LOGS" > commit_log.txt
           echo "COMMIT_LOG<<EOF" >> $GITHUB_ENV
           echo "$FORMATTED_COMMIT_LOGS" >> $GITHUB_ENV
@@ -127,7 +127,6 @@ jobs:
           fi
           TRUNCATED_COMMIT_LOG="$COMMIT_LOG"
           telegram_commit_messages=$(echo "$TRUNCATED_COMMIT_LOG" | sed 's/%0A/\n/g' | sed -E 's/● (.*) ~(.*) \[֍\]\((.*)\)/● \1 ~\2 <a href="\3">֍<\/a>/')
-          message=$(echo "$telegram_commit_messages" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request <a href="https://github.com/${{ github.repository }}/pull/\1">#\1</a> from \2|g')
           formatted_messages="<blockquote>${telegram_commit_messages}</blockquote>"
           curl -v -X POST \
           "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
@@ -153,6 +152,7 @@ jobs:
             fi
           fi
           ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
+          ESCAPED_COMMIT_LOG=$(echo "$ESCAPED_COMMIT_LOG" | sed -E 's/#([0-9]+)/[#\1](https:\/\/github.com\/Shebyyy\/Awery\/pull\/\1)/g')
           payload="{
             \"content\": \"<@&1208839371575529572>\",
             \"embeds\": [{
