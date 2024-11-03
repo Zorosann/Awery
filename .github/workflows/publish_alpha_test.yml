@@ -154,7 +154,6 @@ jobs:
             fi
           fi
           ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
-    
           payload=$(
             cat <<EOF
             {
