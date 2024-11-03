@@ -152,7 +152,8 @@ jobs:
             fi
           fi
           ESCAPED_COMMIT_LOG=$(echo "$COMMIT_LOG" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
-          ESCAPED_COMMIT_LOG=$(echo "$ESCAPED_COMMIT_LOG" | sed -E 's|Merge pull request #([0-9]+) from ([^ ]+)|Merge pull request [#\1](https://github.com/Shebyyy/Awery/pull/\1) from \2|g')
+          ESCAPED_COMMIT_LOG=$(echo "$ESCAPED_COMMIT_LOG" | sed -E 's/Merge pull request #([0-9]+) from ([^ ]+)/Merge pull request #\1 from \2/g')
+
           payload="{
             \"content\": \"<@&1208839371575529572>\",
             \"embeds\": [{
