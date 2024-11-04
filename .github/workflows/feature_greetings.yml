@@ -10,6 +10,9 @@ jobs:
     permissions:
       issues: write
     steps:
+    - name: Install jq
+      run: sudo apt-get install -y jq
+
     - name: Check if the issue is labeled as a Feature Request
       id: check_feature_label
       run: |
@@ -41,9 +44,17 @@ jobs:
       id: check_previous_requests
       run: |
         ISSUE_AUTHOR=$(jq -r '.issue.user.login' "$GITHUB_EVENT_PATH")
+        REPO_OWNER=$(jq -r '.repository.owner.login' "$GITHUB_EVENT_PATH")
+
+        # Make sure GITHUB_REPOSITORY is set correctly
+        echo "Repository: $GITHUB_REPOSITORY"
+        echo "Issue Author: $ISSUE_AUTHOR"
+
+        # Retrieve issues and parse count
         RESPONSE=$(curl -s "https://api.github.com/search/issues?q=author:${ISSUE_AUTHOR}+label:\"New Feature\"+repo:${GITHUB_REPOSITORY}")
-        COUNT=$(echo "$RESPONSE" | jq -r '.total_count')
-        if [ "$COUNT" -gt 0 ]; then
+        COUNT=$(echo "$RESPONSE" | jq -r '.total_count' 2>/dev/null || echo "0")
+
+        if [[ "$COUNT" =~ ^[0-9]+$ ]] && [ "$COUNT" -gt 0 ]; then
           echo "This user has made previous feature requests. Skipping greeting message."
           echo "first_time=false" >> $GITHUB_ENV
         else
@@ -60,16 +71,13 @@ jobs:
           const message = `
           **💡 Thank you for your feature request!**  
           Your request has been successfully submitted and is now under consideration. We value your input in shaping the future of Awery.
-
           **📈 What to Expect Next**  
           - Our team will review your request and assess its feasibility.  
           - We may reach out for additional details or clarification.  
           - Updates on the request will be provided, and it may be scheduled for future development.
-
           **👥 Stay Connected**  
           - **[Discord](https://discord.com/invite/yspVzD4Kbm)**: Join our community to discuss ideas and stay updated.  
           - **[Telegram](https://t.me/mrboomdev_awery)**: Connect with us directly for real-time updates.
-
           We appreciate your suggestion and look forward to potentially implementing it!
           `;
           await github.rest.issues.createComment({
